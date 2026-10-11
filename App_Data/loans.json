@@ -1,0 +1,26 @@
+﻿[
+    {
+        "Id":  1,
+        "PersonOrBank":  "HDFC Bank",
+        "Amount":  50000.00,
+        "DueDate":  "10/04/2026",
+        "Type":  "I Borrowed",
+        "UserEmail":  "tushar123@gmail.com"
+    },
+    {
+        "Id":  2,
+        "PersonOrBank":  "Rahul",
+        "Amount":  5000.00,
+        "DueDate":  "15/04/2026",
+        "Type":  "I Lent",
+        "UserEmail":  "tushar123@gmail.com"
+    },
+    {
+        "Id":  3,
+        "PersonOrBank":  "Car Loan EMI",
+        "Amount":  8500.00,
+        "DueDate":  "05/04/2026",
+        "Type":  "I Borrowed",
+        "UserEmail":  "tushar123@gmail.com"
+    }
+]
