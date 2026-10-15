@@ -1,3 +1,4 @@
+// this is budget page u can view budget and many more
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Budget.aspx.cs" Inherits="Expense_Tracker.Budget" %>
 
 <!DOCTYPE html>
@@ -23,6 +24,7 @@
                         </div>
                         <span class="brand-title">Expense Tracker</span>
                     </div>
+
 
                     <!-- Navigation Links -->
                     <ul class="nav-menu">
@@ -302,6 +304,8 @@
         </div>
     </form>
 
+
+
     <script>
         function openIncomeModal() {
             document.getElementById('incomeModal').classList.add('active');
@@ -312,3 +316,6 @@
     </script>
 </body>
 </html>
+
+
+
