@@ -66,6 +66,7 @@
                                 5. Log Expense
                             </a>
                         </li>
+                        <!--nav-item-->
                         <li class="nav-item">
                             <a href="Income.aspx">
                                 <span class="nav-icon">
