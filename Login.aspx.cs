@@ -1,3 +1,6 @@
+
+
+
 using System;
 using System.Web.UI;
 using Expense_Tracker.Services;
@@ -23,6 +26,7 @@ namespace Expense_Tracker
             }
         }
 
+
         protected void btnLogin_Click(object sender, EventArgs e)
         {
             string email = txtEmail.Text.Trim();
@@ -33,6 +37,7 @@ namespace Expense_Tracker
                 ShowMessage("Please enter both email and password.", false);
                 return;
             }
+
 
             // Authenticate against registered users in App_Data/users.json
             if (ExpenseDataService.ValidateUser(email, password, out var user))
@@ -59,6 +64,7 @@ namespace Expense_Tracker
             }
         }
 
+
         private void ShowMessage(string message, bool isSuccess)
         {
             lblMessage.Text = message;
@@ -67,3 +73,10 @@ namespace Expense_Tracker
         }
     }
 }
+
+
+
+
+
+
+
