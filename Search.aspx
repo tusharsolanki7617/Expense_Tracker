@@ -9,6 +9,7 @@
     <link href="Content/dashboard.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+    <!-- ASP.NET server form: allows Web Forms controls to post back to the server. -->
     <form id="form1" runat="server">
         <div class="app-container">
             <!-- Sidebar Navigation -->
@@ -34,6 +35,7 @@
                                 1. Dashboard
                             </a>
                         </li>
+<!--nav item-->
                         <li class="nav-item">
                             <a href="Transactions.aspx">
                                 <span class="nav-icon">
@@ -143,6 +145,7 @@
             </aside>
 
             <!-- Main Content Wrapper -->
+            <!-- Main area contains the page header and transaction search content. -->
             <div class="main-wrapper">
                 <!-- Top Header Bar -->
                 <header class="top-bar">
@@ -171,6 +174,7 @@
                         <h2 class="budget-card-title">Search Transactions</h2>
 
                         <!-- Search Input Field with Leading Magnifying Glass Icon -->
+                        <!-- Search field: triggers server-side search and client-side live filtering. -->
                         <div class="search-input-wrap">
                             <svg viewBox="0 0 24 24">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -180,6 +184,7 @@
                         </div>
 
                         <!-- Filter Pills: All, Income, Expense -->
+                        <!-- These buttons let the user choose all transactions, income, or expenses. -->
                         <div class="search-filter-pills">
                             <asp:LinkButton ID="btnFilterAll" runat="server" CssClass="search-pill active" OnClick="btnFilter_Click" CommandArgument="All">All</asp:LinkButton>
                             <asp:LinkButton ID="btnFilterIncome" runat="server" CssClass="search-pill" OnClick="btnFilter_Click" CommandArgument="Income">Income</asp:LinkButton>
@@ -187,6 +192,7 @@
                         </div>
 
                         <!-- Initial Empty Search State -->
+                        <!-- Shown before a search is entered; visibility is also controlled by JavaScript. -->
                         <asp:Panel ID="pnlEmptyState" runat="server" CssClass="search-empty-state">
                             <svg class="search-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -197,12 +203,14 @@
                         </asp:Panel>
 
                         <!-- No Matching Results State -->
+                        <!-- Server-side message for a search that returns no matching transactions. -->
                         <asp:Panel ID="pnlNoResults" runat="server" Visible="false" style="text-align:center; padding: 60px 20px; color:#8a90a6;">
                             <p style="font-size: 16px; font-weight: 500; color: #ffffff; margin-bottom: 6px;">No transactions found</p>
                             <p style="font-size: 13.5px;">Try searching with a different keyword or category</p>
                         </asp:Panel>
 
                         <!-- Search Results List -->
+                        <!-- Repeater renders each transaction returned by the code-behind search. -->
                         <asp:Panel ID="pnlResults" runat="server" Visible="false">
                             <div class="transaction-list" id="searchResultsContainer">
                                 <asp:Repeater ID="rptSearchResults" runat="server">
@@ -236,13 +244,17 @@
 
     <script>
         // Client-side instant live filtering as user types
+        // Runs as the user types, filtering the transaction rows already rendered on the page.
         function clientSearchFilter() {
             var input = document.getElementById('<%= txtSearchQuery.ClientID %>');
+            // Normalize the query so matching is case-insensitive and ignores outer spaces.
             var filter = input.value.toLowerCase().trim();
             var emptyState = document.getElementById('<%= pnlEmptyState.ClientID %>');
             var resultsPanel = document.getElementById('<%= pnlResults.ClientID %>');
+            // Select every transaction row currently displayed by the ASP.NET Repeater.
             var rows = document.querySelectorAll('.search-item-row');
 
+            // If the search box is empty, show the starting state and hide the results list.
             if (filter.length === 0) {
                 if (emptyState) emptyState.style.display = 'flex';
                 if (resultsPanel) resultsPanel.style.display = 'none';
@@ -252,6 +264,7 @@
             if (emptyState) emptyState.style.display = 'none';
             if (resultsPanel) resultsPanel.style.display = 'block';
 
+            // Show rows containing the query and hide rows that do not match it.
             rows.forEach(function (row) {
                 var text = row.innerText.toLowerCase();
                 if (text.indexOf(filter) > -1) {
