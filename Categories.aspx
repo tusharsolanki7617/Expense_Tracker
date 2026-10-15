@@ -1,5 +1,8 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Categories.aspx.cs" Inherits="Expense_Tracker.Categories" %>
 
+
+
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head runat="server">
@@ -14,6 +17,7 @@
             <!-- Sidebar Navigation -->
             <aside class="sidebar">
                 <div>
+
                     <!-- Brand / App Logo -->
                     <div class="brand-header">
                         <div class="brand-icon-box">
@@ -23,6 +27,7 @@
                         </div>
                         <span class="brand-title">Expense Tracker</span>
                     </div>
+
 
                     <!-- Navigation Links -->
                     <ul class="nav-menu">
