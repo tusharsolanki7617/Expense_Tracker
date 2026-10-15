@@ -234,7 +234,9 @@
                                 <a href="Transactions.aspx" class="view-all-link">View All &rarr;</a>
                             </div>
 
-                            <div class="transaction-list">
+                            
+
+<div class="transaction-list">
                                 <asp:Repeater ID="rptRecentExpenses" runat="server">
                                     <ItemTemplate>
                                         <div class="transaction-row">
@@ -303,7 +305,7 @@
         </div>
     </form>
 
-    <script>
+  <script>
         function openIncomeModal() {
             document.getElementById('incomeModal').classList.add('active');
         }
