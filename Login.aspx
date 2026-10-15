@@ -46,6 +46,7 @@
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
                     </span>
+
                     <asp:TextBox ID="txtPassword" runat="server" CssClass="auth-input" TextMode="Password" placeholder="Password" required="required" autocomplete="current-password"></asp:TextBox>
                     <button type="button" class="toggle-password" id="btnTogglePassword" onclick="togglePasswordVisibility('txtPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                         <svg id="eyeIcon" viewBox="0 0 24 24">
@@ -54,6 +55,7 @@
                         </svg>
                     </button>
                 </div>
+
 
                 <!-- Action Button -->
                 <asp:Button ID="btnLogin" runat="server" Text="Log In" CssClass="btn-submit" OnClick="btnLogin_Click" />
@@ -65,6 +67,8 @@
             </form>
         </div>
     </div>
+
+
 
     <!-- Toggle Password Visibility Script -->
     <script type="text/javascript">
@@ -91,6 +95,7 @@
                     </svg>`;
             }
         }
+
     </script>
 </body>
 </html>
