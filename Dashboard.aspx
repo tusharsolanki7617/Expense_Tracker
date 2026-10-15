@@ -1,3 +1,4 @@
+// this is dashboard page
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Dashboard.aspx.cs" Inherits="Expense_Tracker.Dashboard" %>
 
 <!DOCTYPE html>
@@ -133,7 +134,7 @@
                     </ul>
                 </div>
 
-                <!-- Logout Button -->
+                <!-- Logout Button --><!--this is logout button -->
                 <div class="sidebar-footer">
                     <a href="Login.aspx" class="logout-btn">
                         <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
@@ -211,7 +212,7 @@
                         </div>
                     </section>
 
-                    <!-- Middle Grid: Summary & Recent Activity -->
+                    <!-- Middle Grid: Summary & Recent Activity Recent Activity -->
                     <div class="middle-grid">
                         <!-- Left: Summary Card -->
                         <div class="summary-card">
@@ -281,6 +282,8 @@
                         </div>
                     </div>
 
+
+
                     <!-- Bottom Grid: 4 Metric Cards -->
                     <div class="bottom-stats-grid">
                         <!-- Total Balance Card -->
@@ -295,6 +298,8 @@
                                 </span>
                             </div>
                         </div>
+
+
 
                         <!-- Total Income Card -->
                         <div class="stat-card">
@@ -322,6 +327,7 @@
                             </div>
                         </div>
 
+
                         <!-- Transactions Count Card -->
                         <div class="stat-card">
                             <div class="stat-icon-box stat-icon-blue">
@@ -338,6 +344,8 @@
                 </main>
             </div>
         </div>
+
+
 
         <!-- Log Expense Modal -->
         <div id="modalExpense" class="modal-overlay">
@@ -374,6 +382,9 @@
             </div>
         </div>
 
+
+
+
         <!-- Add Income Modal -->
         <div id="modalIncome" class="modal-overlay">
             <div class="modal-box">
@@ -409,6 +420,8 @@
             </div>
         </div>
 
+
+
         <script type="text/javascript">
             function openExpenseModal() {
                 document.getElementById('modalExpense').classList.add('active');
@@ -436,3 +449,32 @@
     </form>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
