@@ -36,6 +36,7 @@
                                 1. Dashboard
                             </a>
                         </li>
+                    <!--- nav 2 ---->
                         <li class="nav-item">
                             <a href="Transactions.aspx">
                                 <span class="nav-icon">
@@ -44,6 +45,7 @@
                                 2. All Transactions
                             </a>
                         </li>
+                    <!---- nav 3 --->
                         <li class="nav-item">
                             <a href="Categories.aspx">
                                 <span class="nav-icon">
