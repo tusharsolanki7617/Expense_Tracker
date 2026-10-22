@@ -1,1 +1,761 @@
+/**
+ * ====================================================================
+ * Expense Tracker - Client-side Form Validation Library
+ * File: Scripts/validation.js
+ * Description: Modular, reusable client-side validation rules and UI
+ * feedback for all forms in the Expense Tracker application.
+ * ====================================================================
+ */
 
+(function () {
+    // -------------------------------------------------------------
+    // 1. Inject Styles for Error Highlighting & Modern Toast Alerts
+    // -------------------------------------------------------------
+    var styleId = 'et-validation-styles';
+    if (!document.getElementById(styleId)) {
+        var style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            .field-has-error {
+                border-color: #ef4444 !important;
+                box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25) !important;
+                animation: etShake 0.3s ease-in-out;
+            }
+            .input-group.field-has-error {
+                border-color: #ef4444 !important;
+                box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25) !important;
+            }
+            @keyframes etShake {
+                0%, 100% { transform: translateX(0); }
+                20%, 60% { transform: translateX(-4px); }
+                40%, 80% { transform: translateX(4px); }
+            }
+            .et-toast-container {
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                max-width: 380px;
+                pointer-events: none;
+            }
+            .et-toast {
+                pointer-events: auto;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 18px;
+                background: #181c2e;
+                color: #ffffff;
+                border-radius: 12px;
+                font-size: 14px;
+                font-family: inherit;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transform: translateY(-20px);
+                opacity: 0;
+                transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .et-toast.visible {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            .et-toast-error {
+                border-color: rgba(239, 68, 68, 0.5);
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, #1a1e34 100%);
+            }
+            .et-toast-error .et-toast-icon {
+                color: #ef4444;
+            }
+            .et-toast-success {
+                border-color: rgba(34, 197, 94, 0.5);
+                background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, #1a1e34 100%);
+            }
+            .et-toast-success .et-toast-icon {
+                color: #22c55e;
+            }
+            .et-toast-msg {
+                flex: 1;
+                line-height: 1.4;
+                font-weight: 500;
+            }
+            .et-toast-close {
+                cursor: pointer;
+                background: none;
+                border: none;
+                color: #8b90a4;
+                font-size: 18px;
+                padding: 0;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+            }
+            .et-toast-close:hover {
+                color: #ffffff;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+})();
+
+// -----------------------------------------------------------------
+// 2. Core Validation Utilities
+// -----------------------------------------------------------------
+const ETValidator = {
+    // Utility helpers
+    get: function (idOrElem) {
+        if (!idOrElem) return null;
+        if (typeof idOrElem === 'string') {
+            return document.getElementById(idOrElem) || document.querySelector('[id$="' + idOrElem + '"]');
+        }
+        return idOrElem;
+    },
+
+    val: function (idOrElem) {
+        var el = this.get(idOrElem);
+        return el ? (el.value || '').trim() : '';
+    },
+
+    isEmpty: function (val) {
+        return !val || val.trim().length === 0;
+    },
+
+    isValidEmail: function (email) {
+        if (!email) return false;
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        return emailPattern.test(email.trim());
+    },
+
+    isNumber: function (val) {
+        if (this.isEmpty(val)) return false;
+        var n = Number(val);
+        return !isNaN(n) && isFinite(n);
+    },
+
+    isPositiveNumber: function (val) {
+        if (!this.isNumber(val)) return false;
+        return Number(val) > 0;
+    },
+
+    isMinLength: function (val, minLen) {
+        return !!val && val.length >= minLen;
+    },
+
+    isValidPhone: function (phone) {
+        if (this.isEmpty(phone)) return true; // Optional if empty
+        var cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+        return cleaned.length >= 7 && /^\d+$/.test(cleaned);
+    },
+
+    // -------------------------------------------------------------
+    // UI Feedback & Alerts
+    // -------------------------------------------------------------
+    markError: function (idOrElem) {
+        var el = this.get(idOrElem);
+        if (!el) return;
+
+        // If wrapped in an input-group, highlight the group
+        var parentGroup = el.closest('.input-group') || el;
+        parentGroup.classList.add('field-has-error');
+
+        // Automatically clear error styling on user input
+        var clearHandler = function () {
+            parentGroup.classList.remove('field-has-error');
+            el.removeEventListener('input', clearHandler);
+            el.removeEventListener('change', clearHandler);
+        };
+        el.addEventListener('input', clearHandler);
+        el.addEventListener('change', clearHandler);
+    },
+
+    clearAllErrors: function () {
+        document.querySelectorAll('.field-has-error').forEach(function (el) {
+            el.classList.remove('field-has-error');
+        });
+    },
+
+    showToast: function (message, type) {
+        type = type || 'error';
+        var container = document.querySelector('.et-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'et-toast-container';
+            document.body.appendChild(container);
+        }
+
+        var toast = document.createElement('div');
+        toast.className = 'et-toast et-toast-' + type;
+
+        var iconSvg = type === 'success'
+            ? '<svg class="et-toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+            : '<svg class="et-toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+        toast.innerHTML = iconSvg +
+            '<span class="et-toast-msg">' + message + '</span>' +
+            '<button type="button" class="et-toast-close" aria-label="Close">&times;</button>';
+
+        container.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(function () {
+            toast.classList.add('visible');
+        });
+
+        // Close button handler
+        var closeBtn = toast.querySelector('.et-toast-close');
+        var removeToast = function () {
+            toast.classList.remove('visible');
+            setTimeout(function () {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        };
+        if (closeBtn) closeBtn.onclick = removeToast;
+
+        // Auto dismiss after 4 seconds
+        setTimeout(removeToast, 4000);
+    },
+
+    setAlertMessage: function (labelId, message, isSuccess) {
+        var lbl = this.get(labelId);
+        if (lbl) {
+            lbl.textContent = message;
+            lbl.style.display = 'block';
+            lbl.className = 'auth-alert visible ' + (isSuccess ? 'success' : 'error');
+        }
+        // Always trigger toast as well for immediate UX visibility
+        this.showToast(message, isSuccess ? 'success' : 'error');
+    }
+};
+
+// -----------------------------------------------------------------
+// 3. Page & Form Specific Validation Functions
+// -----------------------------------------------------------------
+
+/**
+ * Validates Login Form (Email & Password)
+ */
+function validateLoginForm() {
+    ETValidator.clearAllErrors();
+
+    var email = ETValidator.val('txtEmail');
+    var password = ETValidator.val('txtPassword');
+
+    if (ETValidator.isEmpty(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter your email address.', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (!ETValidator.isValidEmail(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter a valid email address (e.g. name@domain.com).', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(password)) {
+        ETValidator.markError('txtPassword');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter your password.', false);
+        var el = ETValidator.get('txtPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Register Form (Full Name, Email, Password, Confirm Password)
+ */
+function validateRegisterForm() {
+    ETValidator.clearAllErrors();
+
+    var fullName = ETValidator.val('txtFullName');
+    var email = ETValidator.val('txtEmail');
+    var password = ETValidator.val('txtPassword');
+    var confirmPassword = ETValidator.val('txtConfirmPassword');
+
+    if (ETValidator.isEmpty(fullName)) {
+        ETValidator.markError('txtFullName');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter your full name.', false);
+        var el = ETValidator.get('txtFullName');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (fullName.length < 2) {
+        ETValidator.markError('txtFullName');
+        ETValidator.setAlertMessage('lblMessage', 'Full name must be at least 2 characters.', false);
+        var el = ETValidator.get('txtFullName');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter your email address.', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (!ETValidator.isValidEmail(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblMessage', 'Please enter a valid email address.', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(password)) {
+        ETValidator.markError('txtPassword');
+        ETValidator.setAlertMessage('lblMessage', 'Please create a password.', false);
+        var el = ETValidator.get('txtPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (password.length < 6) {
+        ETValidator.markError('txtPassword');
+        ETValidator.setAlertMessage('lblMessage', 'Password must be at least 6 characters long.', false);
+        var el = ETValidator.get('txtPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(confirmPassword)) {
+        ETValidator.markError('txtConfirmPassword');
+        ETValidator.setAlertMessage('lblMessage', 'Please confirm your password.', false);
+        var el = ETValidator.get('txtConfirmPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (password !== confirmPassword) {
+        ETValidator.markError('txtPassword');
+        ETValidator.markError('txtConfirmPassword');
+        ETValidator.setAlertMessage('lblMessage', 'Passwords do not match. Please verify.', false);
+        var el = ETValidator.get('txtConfirmPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Profile Details (Full Name, Email, Phone)
+ */
+function validateProfileForm() {
+    ETValidator.clearAllErrors();
+
+    var fullName = ETValidator.val('txtFullName');
+    var email = ETValidator.val('txtEmail');
+    var phone = ETValidator.val('txtPhone');
+
+    if (ETValidator.isEmpty(fullName)) {
+        ETValidator.markError('txtFullName');
+        ETValidator.setAlertMessage('lblProfileMessage', 'Full name is required.', false);
+        var el = ETValidator.get('txtFullName');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblProfileMessage', 'Email address is required.', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (!ETValidator.isValidEmail(email)) {
+        ETValidator.markError('txtEmail');
+        ETValidator.setAlertMessage('lblProfileMessage', 'Please enter a valid email address.', false);
+        var el = ETValidator.get('txtEmail');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (!ETValidator.isEmpty(phone) && !ETValidator.isValidPhone(phone)) {
+        ETValidator.markError('txtPhone');
+        ETValidator.setAlertMessage('lblProfileMessage', 'Please enter a valid phone number.', false);
+        var el = ETValidator.get('txtPhone');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Password Change Form
+ */
+function validateChangePasswordForm() {
+    ETValidator.clearAllErrors();
+
+    var currentPass = ETValidator.val('txtCurrentPassword');
+    var newPass = ETValidator.val('txtNewPassword');
+    var confirmPass = ETValidator.val('txtConfirmNewPassword');
+
+    if (ETValidator.isEmpty(currentPass)) {
+        ETValidator.markError('txtCurrentPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'Please enter your current password.', false);
+        var el = ETValidator.get('txtCurrentPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(newPass)) {
+        ETValidator.markError('txtNewPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'Please enter a new password.', false);
+        var el = ETValidator.get('txtNewPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (newPass.length < 6) {
+        ETValidator.markError('txtNewPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'New password must be at least 6 characters.', false);
+        var el = ETValidator.get('txtNewPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (currentPass === newPass) {
+        ETValidator.markError('txtNewPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'New password cannot be the same as the current password.', false);
+        var el = ETValidator.get('txtNewPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(confirmPass)) {
+        ETValidator.markError('txtConfirmNewPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'Please repeat the new password in Confirm Password.', false);
+        var el = ETValidator.get('txtConfirmNewPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (newPass !== confirmPass) {
+        ETValidator.markError('txtNewPassword');
+        ETValidator.markError('txtConfirmNewPassword');
+        ETValidator.setAlertMessage('lblPasswordMessage', 'New passwords do not match.', false);
+        var el = ETValidator.get('txtConfirmNewPassword');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Log Expense Form
+ */
+function validateExpenseForm() {
+    ETValidator.clearAllErrors();
+
+    var title = ETValidator.val('txtExpenseTitle');
+    var amount = ETValidator.val('txtExpenseAmount');
+    var date = ETValidator.val('txtExpenseDate');
+
+    if (ETValidator.isEmpty(title)) {
+        ETValidator.markError('txtExpenseTitle');
+        ETValidator.showToast('Please enter an expense title.', 'error');
+        var el = ETValidator.get('txtExpenseTitle');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtExpenseAmount');
+        ETValidator.showToast('Please enter a valid expense amount greater than 0.', 'error');
+        var el = ETValidator.get('txtExpenseAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(date)) {
+        ETValidator.markError('txtExpenseDate');
+        ETValidator.showToast('Please select a date for this expense.', 'error');
+        var el = ETValidator.get('txtExpenseDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Add Income Form
+ */
+function validateIncomeForm() {
+    ETValidator.clearAllErrors();
+
+    var source = ETValidator.val('txtIncomeSource');
+    var amount = ETValidator.val('txtIncomeAmount');
+    var date = ETValidator.val('txtIncomeDate');
+
+    if (ETValidator.isEmpty(source)) {
+        ETValidator.markError('txtIncomeSource');
+        ETValidator.showToast('Please enter the income source/title.', 'error');
+        var el = ETValidator.get('txtIncomeSource');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtIncomeAmount');
+        ETValidator.showToast('Please enter a valid income amount greater than 0.', 'error');
+        var el = ETValidator.get('txtIncomeAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(date)) {
+        ETValidator.markError('txtIncomeDate');
+        ETValidator.showToast('Please select a date for this income.', 'error');
+        var el = ETValidator.get('txtIncomeDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Budget Limit Form
+ */
+function validateBudgetForm() {
+    ETValidator.clearAllErrors();
+
+    var amount = ETValidator.val('txtBudgetAmount');
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtBudgetAmount');
+        ETValidator.showToast('Please enter a valid budget limit amount greater than 0.', 'error');
+        var el = ETValidator.get('txtBudgetAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Bill Reminders Form
+ */
+function validateBillForm() {
+    ETValidator.clearAllErrors();
+
+    var name = ETValidator.val('txtBillName');
+    var amount = ETValidator.val('txtBillAmount');
+    var dueDate = ETValidator.val('txtBillDueDate');
+
+    if (ETValidator.isEmpty(name)) {
+        ETValidator.markError('txtBillName');
+        ETValidator.showToast('Please enter the bill name (e.g. Electricity, Rent).', 'error');
+        var el = ETValidator.get('txtBillName');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtBillAmount');
+        ETValidator.showToast('Please enter a valid bill amount greater than 0.', 'error');
+        var el = ETValidator.get('txtBillAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(dueDate)) {
+        ETValidator.markError('txtBillDueDate');
+        ETValidator.showToast('Please select the due date for this bill.', 'error');
+        var el = ETValidator.get('txtBillDueDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Subscriptions Form
+ */
+function validateSubscriptionForm() {
+    ETValidator.clearAllErrors();
+
+    var name = ETValidator.val('txtSubName');
+    var amount = ETValidator.val('txtSubAmount');
+    var dueDate = ETValidator.val('txtSubDueDate');
+
+    if (ETValidator.isEmpty(name)) {
+        ETValidator.markError('txtSubName');
+        ETValidator.showToast('Please enter the subscription name (e.g. Netflix, Spotify).', 'error');
+        var el = ETValidator.get('txtSubName');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtSubAmount');
+        ETValidator.showToast('Please enter a valid monthly amount greater than 0.', 'error');
+        var el = ETValidator.get('txtSubAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(dueDate)) {
+        ETValidator.markError('txtSubDueDate');
+        ETValidator.showToast('Please select the next billing date.', 'error');
+        var el = ETValidator.get('txtSubDueDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Loan Form
+ */
+function validateLoanForm() {
+    ETValidator.clearAllErrors();
+
+    var person = ETValidator.val('txtPersonOrBank');
+    var amount = ETValidator.val('txtLoanAmount');
+    var dueDate = ETValidator.val('txtLoanDueDate');
+
+    if (ETValidator.isEmpty(person)) {
+        ETValidator.markError('txtPersonOrBank');
+        ETValidator.showToast('Please enter the Person or Bank name.', 'error');
+        var el = ETValidator.get('txtPersonOrBank');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtLoanAmount');
+        ETValidator.showToast('Please enter a valid loan amount greater than 0.', 'error');
+        var el = ETValidator.get('txtLoanAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(dueDate)) {
+        ETValidator.markError('txtLoanDueDate');
+        ETValidator.showToast('Please select the due date.', 'error');
+        var el = ETValidator.get('txtLoanDueDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Modal Expense Form (Modal popup)
+ */
+function validateModalExpense() {
+    ETValidator.clearAllErrors();
+
+    var title = ETValidator.val('txtExpenseTitle');
+    var amount = ETValidator.val('txtExpenseAmount');
+    var date = ETValidator.val('txtExpenseDate');
+
+    if (ETValidator.isEmpty(title)) {
+        ETValidator.markError('txtExpenseTitle');
+        ETValidator.showToast('Please enter an expense title in the modal.', 'error');
+        var el = ETValidator.get('txtExpenseTitle');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtExpenseAmount');
+        ETValidator.showToast('Please enter a valid expense amount greater than 0.', 'error');
+        var el = ETValidator.get('txtExpenseAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(date)) {
+        ETValidator.markError('txtExpenseDate');
+        ETValidator.showToast('Please select a date for this expense.', 'error');
+        var el = ETValidator.get('txtExpenseDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates Modal Income Form (Modal popup)
+ */
+function validateModalIncome() {
+    ETValidator.clearAllErrors();
+
+    var title = ETValidator.val('txtIncomeTitle');
+    var amount = ETValidator.val('txtIncomeAmount');
+    var date = ETValidator.val('txtIncomeDate');
+
+    if (ETValidator.isEmpty(title)) {
+        ETValidator.markError('txtIncomeTitle');
+        ETValidator.showToast('Please enter an income title/source.', 'error');
+        var el = ETValidator.get('txtIncomeTitle');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(amount) || !ETValidator.isPositiveNumber(amount)) {
+        ETValidator.markError('txtIncomeAmount');
+        ETValidator.showToast('Please enter a valid income amount greater than 0.', 'error');
+        var el = ETValidator.get('txtIncomeAmount');
+        if (el) el.focus();
+        return false;
+    }
+
+    if (ETValidator.isEmpty(date)) {
+        ETValidator.markError('txtIncomeDate');
+        ETValidator.showToast('Please select a date for this income.', 'error');
+        var el = ETValidator.get('txtIncomeDate');
+        if (el) el.focus();
+        return false;
+    }
+
+    return true;
+}
+
+// -----------------------------------------------------------------
+// 4. Shared UI Helper: Toggle Password Visibility
+// -----------------------------------------------------------------
+function togglePasswordVisibility(inputId, toggleBtn) {
+    var input = ETValidator.get(inputId);
+    if (!input) return;
+
+    var isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+
+    if (isPassword) {
+        toggleBtn.innerHTML =
+            '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>' +
+            '<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>' +
+            '<path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>' +
+            '<line x1="2" y1="2" x2="22" y2="22"></line>' +
+            '</svg>';
+    } else {
+        toggleBtn.innerHTML =
+            '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>' +
+            '<circle cx="12" cy="12" r="3"></circle>' +
+            '</svg>';
+    }
+}
