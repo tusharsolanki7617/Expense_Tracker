@@ -45,7 +45,7 @@
                                 2. All Transactions
                             </a>
                         </li>
-                    <!---- nav 3 --->
+                    <!--- nav 3 --->
                         <li class="nav-item">
                             <a href="Categories.aspx">
                                 <span class="nav-icon">
