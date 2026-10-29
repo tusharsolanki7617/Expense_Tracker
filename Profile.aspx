@@ -1,4 +1,5 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Profile.aspx.cs" Inherits="Expense_Tracker.Profile" %>
+<!--- Profile page for the Expense Tracker application --->
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -335,11 +336,11 @@
             function closeIncomeModal() {
                 document.getElementById('modalIncome').classList.remove('active');
             }
-            window.onclick = function(event) {
-                var expModal = document.getElementById('modalExpense');
-                var incModal = document.getElementById('modalIncome');
-                if (event.target == expModal) closeExpenseModal();
-                if (event.target == incModal) closeIncomeModal();
+            window.onclick = function(clickEvent) {
+                var expenseDialog = document.getElementById('modalExpense');
+                var incomeDialog = document.getElementById('modalIncome');
+                if (clickEvent.target === expenseDialog) closeExpenseModal();
+                if (clickEvent.target === incomeDialog) closeIncomeModal();
             }
         </script>
     </form>
